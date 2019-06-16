@@ -1,0 +1,3 @@
+- https://docs.python-guide.org/writing/structure/
+- https://stackoverflow.com/questions/52827722/folder-naming-convention-for-python-projects
+- https://wiki.python.org.br/SocketBasico
