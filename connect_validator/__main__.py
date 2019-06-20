@@ -34,6 +34,8 @@ def main():
     print(c_server.server_array())
     print('----------------')
 
+    c_server.halt()
+
     time.sleep(1)
 
     a_server.send_token('https://github.com/gustavospiess/bcc_2019_1_sisdist_tr_final/tree/refactor')# TODO: Normalizar url

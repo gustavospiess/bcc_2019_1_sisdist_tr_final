@@ -103,7 +103,9 @@ class Server():
         return True
     
     def _request_url(self, url):
-        # TODO: docstring
+        """Realiza a requisição para a URL e retona:
+            - O código de status (200, 400, 404, 500).
+            - Error, invalid url (se a url não for válida)"""
         try:
             response = requests.get(url)
             return response.status_code
@@ -148,7 +150,7 @@ class Server():
             self._wait(lambda: self.expecting != 'confirm_token' or not self.timeout_limit)
             if self.expecting == 'confirm_token':
                 ignore.append(server)
-                # TODO: Add server not responding to token
+                token.append_server(str(server.server_config.signature), 'Error, server not responding')
                 continue
             break
 
