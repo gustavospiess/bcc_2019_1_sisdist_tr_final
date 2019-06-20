@@ -18,11 +18,25 @@ class ServerSignature():
         self.receive = (ip, port)
         self.send = (ip, port + 1)
 
+    def _format_tuple(self, tup):
+        # TODO: docstring
+        (ip, port) = tup
+        return ip + ":" + str(port)
+
+    @property
+    def receive_str(self):
+        # TODO: docstring
+        return self._format_tuple(self.receive)
+
+    @property
+    def send_str(self):
+        # TODO: docstring
+        return self._format_tuple(self.send)
+
     def __str__(self):
         """implementação da conversão para string:
         retorna o IP + a porta de recebimento. Ex.: 127.0.0.1:5050"""
-        (ip, port) = self.receive
-        return ip + ":" + str(port)
+        return self.receive_str
 
     def __repr__(self):
         # TODO: docstring
@@ -61,24 +75,24 @@ class ServerConfig():
         de mensagens de log, por meio da flag debug_mode, por padrão false."""
         self.signature = signature
         self.charset = charset
-        self.debug_mode = debug_mode
+        self.debug = debug_mode
 
     def __repr__(self):
         # TODO: docstring
-        params =(repr(self.signature), repr(self.charset), repr(self.debug_mode))
+        params =(repr(self.signature), repr(self.charset), repr(self.debug))
         return "ServerConfig(%s, %s, %s)" % params
 
     def _client_socket(self, orig):
         """método interno para inicialização de socket de envio."""
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if self.debug_mode: print('iniciado socket de envio em: ' + str(orig.send))
+        if self.debug: print('iniciado socket de envio em: ' + orig.send_str)
         udp_socket.bind(('', orig.send[1]))
         return udp_socket
 
     def _server_socket(self):
         """método interno para inicialização de socket de recebimento."""
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if self.debug_mode: print('iniciado socket de recebimento em: ' + str(self.signature.receive))
+        if self.debug: print('iniciado socket de recebimento em: ' + self.signature.receive_str)
         udp_socket.bind(self.signature.receive)
         return udp_socket
     
@@ -86,12 +100,12 @@ class ServerConfig():
         """método interno para manutenção de loop de recebimento de mensagens."""
         with self._server_socket() as udp_socket:
             while True:
-                if self.debug_mode: print('esperando mensagem em: ' + str(self.signature.receive))
+                if self.debug: print('esperando mensagem em: ' + self.signature.receive_str)
                 msg = udp_socket.recvfrom(1024)
-                if self.debug_mode: print('recebida mensagem (' + str(msg) + ') em: ' + str(self.signature.receive))
+                if self.debug: print('recebida mensagem (' + str(msg) + ') em: ' + self.signature.receive_str)
                 (bts_msg, orig) = msg
                 if not call_back(bts_msg, orig):
-                    if self.debug_mode: print('callback retornou falso, halt')
+                    if self.debug: print('callback retornou falso, halt')
                     break
 
     def _get_thread(self, target, args):
@@ -148,4 +162,4 @@ class ServerConfig():
         É esperado que a mensagem seja uma string"""
         with self._client_socket(orig) as udp:
             udp.sendto (self.encode(message), self.signature.receive)
-            if self.debug_mode: print('enviada mensagem (' + str(message) + ') para: ' + str(self.signature.receive))
+            if self.debug: print('enviada mensagem (' + str(message) + ') para: ' + self.signature.receive_str)

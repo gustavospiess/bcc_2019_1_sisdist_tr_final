@@ -1,12 +1,31 @@
+from server_config import ServerSignature
+from server_config import ServerConfig
+
 class ExternalServer():
     """Imagem de um servidor externo, fornece as interfaces para envio de mensagens."""
-    def __init__(self, server_config):
+    def __init__(self, server_config, charset='utf-8', debug_mode=False):
         """Inicialização de servidor externo, recebe uma instancia de ServerConfig"""
+
+        # TODO: docstring
+        if isinstance(server_config, ServerSignature):
+            server_config = ServerConfig(server_config, charset, debug_mode)
+
         self.server_config = server_config
 
     @property
     def signature(self):
+        # TODO: docstring
         return self.server_config.signature
+
+    @property
+    def debug(self):
+        # TODO: docstring
+        return self.server_config.debug
+
+    @debug.setter
+    # TODO: docstring
+    def debug(self, debug_mode):
+        self.server_config.debug = debug_mode
 
     def get_server_list(self, orig):
         """Requisita o servidor externo dos servidores por ele conhecidos e retorna a lista"""

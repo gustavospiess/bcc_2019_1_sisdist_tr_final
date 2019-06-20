@@ -10,9 +10,9 @@ import os
 import click # TODO: manual de instalação (pip install click)
 
 def menu(server, debug):
+    if not debug:
+        os.system('cls' if os.name == 'nt' else 'clear')
     while True:
-        if not debug:
-            os.system('cls' if os.name == 'nt' else 'clear')
         print('--------------------------------------------------------------------------------')   
         print('You are runnig in '+str(server.signature))
         print('Type exit/Ctrl-C/Ctrl-D to finish')   
@@ -29,6 +29,8 @@ def menu(server, debug):
             pass
         if inp == 'exit':
             break
+        if not debug:
+            os.system('cls' if os.name == 'nt' else 'clear')
         server.send_token(inp)
 
     server.halt()
@@ -81,15 +83,14 @@ def cli(debug, port, server, timeout_limit):
     if debug:
         print('Starting in debug mode')
         print(port)
-        print(server)
+        if server: print(server)
 
     if not validate_server_port(server, port):
         return
 
     ext = None
     if server:
-        conf = ServerConfig(server, debug_mode=debug)
-        ext = ExternalServer(conf)
+        ext = ExternalServer(server, debug_mode=debug)
 
     local_server = Server(port, ext, timeout_limit, debug)
 

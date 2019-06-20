@@ -19,11 +19,8 @@ class Server():
         requisição antes de considerar que o servidor para quem foi enviada não
         está no ar."""
 
-        self.signature = signature
         self.server_config = ServerConfig(signature, debug_mode = debug_mode)
-
         self.timeout_limit = timeout_limit
-
         self._server_list = set()
 
         thr = self.server_config.server_thread(self._msg_recv)
@@ -37,11 +34,23 @@ class Server():
             self.expecting = 'serverList'
             start_server.get_server_list(self.signature)
 
+    @property
+    def signature(self):
+        # TODO: docstring
+        return self.server_config.signature
+
+    @property
+    def debug(self):
+        # TODO: docstring
+        return self.server_config.debug
+
     def _append_server(self, server):
         """método interno para injeção de novos servidores na lista de
         servidores conhecidos."""
+        # TODO: docstring
         if (self.signature == server.server_config.signature):
             return
+        server.debug = self.debug
         self._server_list.add(server)
 
     def _next_server(self, ignore=[]):
@@ -62,7 +71,7 @@ class Server():
             if server in ignore:
                 continue
             return sorted_list[0]
-        return ExternalServer(self.server_config)
+        return False
 
     def _say_hello(self):
         """método interno para disparo das mensagens de aceno para os servidores conhecidos."""
@@ -94,20 +103,25 @@ class Server():
     
     def _conclude_token(self, token):
         # TODO: docstring
-        # TODO: implement
-        print('confirmado_token')
-        print(repr(token))
+        if self.debug: print('--------------------------------------------------------------------------------')
+        print('> Recebida resposta')
+        print()
+        print('> ' + token.url)
+        print()
+        for (server, response) in token.stack.items():
+            print('  > ' + server + ' - ' + response)
+        print('--------------------------------------------------------------------------------')
         return True
     
     def _request_url(self, url):
         """Realiza a requisição para a URL e retona:
             - O código de status (200, 400, 404, 500).
-            - Error, invalid url (se a url não for válida)"""
+            - Error, it is not possible to reach the informed url"""
         try:
             response = requests.get(url)
             return response.status_code
         except:
-            return "Error, invalid url"
+            return "Error, it is not possible to reach the informed url"
     
     def _proccess_token(self, token):
         """Realiza o processamento do token, utilizando o método _request_url
