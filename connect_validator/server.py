@@ -9,7 +9,7 @@ import threading
 import requests # TODO: manual de isntalalção (pip install requests)
 
 class Server():
-    def __init__(self, signature, start_server=None, timeout_limit = 2):
+    def __init__(self, signature, start_server=None, timeout_limit = 2, debug_mode = False):
         """Inicialização do servidor, necessita o recebimento da assinatura do
         servidor (instancia de ServerSignature).  Opcionalmente também pode ser
         receber uma instancia de external server para se conectar a rede da
@@ -20,7 +20,7 @@ class Server():
         está no ar."""
 
         self.signature = signature
-        self.server_config = ServerConfig(signature)
+        self.server_config = ServerConfig(signature, debug_mode = debug_mode)
 
         self.timeout_limit = timeout_limit
 
@@ -40,7 +40,8 @@ class Server():
     def _append_server(self, server):
         """método interno para injeção de novos servidores na lista de
         servidores conhecidos."""
-        self._server_list.add(server)
+        if (self.signature != server.server_config.signature):
+            self._server_list.add(server)
 
     def _next_server(self, ignore=[]):
         """método interno para obténção do próximo servidor conhecido.
@@ -141,6 +142,9 @@ class Server():
         a espera pelo tempo de timeout configurado."""
 
         ignore = []
+        for server in self._server_list:
+            if server.server_config.signature in token.server_stack:
+                ignore.append(server)
         while True:
             server = self._next_server(ignore)
             if not server:
@@ -212,12 +216,19 @@ class Server():
                 return self._recv_confirm_token()
 
         if self.expecting == 'serverList':
-            self.expecting = False
-            return self._recv_server_list(str_msg)
+            try:
+                result = self._recv_server_list(str_msg)
+                self.expecting = False
+                return result
+            except:
+                pass
 
-        token = eval(str_msg)
-        if isinstance(token, Token):
-            return self._recv_token(conf, token)
+        try:
+            token = eval(str_msg)
+            if isinstance(token, Token):
+                return self._recv_token(conf, token)
+        except:
+            return True
 
     def send_token(self, url):
         """Iinicailiza um token a partir da URL recebida, valida o mesmo
