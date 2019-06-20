@@ -13,7 +13,7 @@ class ExternalServer():
         self.server_config.send(orig, 'hello')
 
     def send_token(self, orig, token):
-        # TODO: docstring
+        """Requisita o servidor externo enviando o token com a representação valorável."""
         self.server_config.send(orig, repr(token))
 
     def __str__(self):
