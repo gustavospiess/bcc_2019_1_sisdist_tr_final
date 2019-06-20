@@ -27,3 +27,8 @@ A qualquer momento, um servidor pode iniciar a validação de acesso dos demais 
   - O servidor `Cn` repete o processo até que a mensagem retorne a `A`.
   - O servidor `A` desenfileira os dados do token e apresenta-o para o usuário.
   - Se o servidor `A` não receber novamente o token em um tempo determinado (uma constante configurável multiplicada pela quantidade de servidores conhecidos), informa ao usuário que houve um erro (timeout) e questiona se deseja executar novamente o processo.
+
+To run use:
+```bash
+python3 connect_validator
+```
