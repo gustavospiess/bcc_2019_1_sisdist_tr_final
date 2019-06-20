@@ -1,6 +1,12 @@
 import socket
 import threading
 
+
+class ServerSignature():
+    def __init__(self, ip, port):
+        self.receive = (ip, port)
+        self.send = (ip, port + 1)
+
 class ServerConfig():
     def __init__(self, dest_sig, charset='utf-8'):
         self.signature = dest_sig
@@ -8,8 +14,8 @@ class ServerConfig():
 
     def _client_socket(self, orig):
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp_socket.bind(('', orig.send[1]))
         print('iniciado socket de envio em: ' + str(orig.send))
+        udp_socket.bind(('', orig.send[1]))
         return udp_socket
 
     def _server_socket(self):

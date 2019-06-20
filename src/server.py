@@ -1,7 +1,6 @@
 from server_config import ServerConfig
-from default_server_work import DefaultServerWork
-from set_server_list_work import SetServerListWork
-from halt_work import HaltWork
+from server_config import ServerSignature
+from external_server import ExternalServer
 
 class Server():
     def __init__(self, signature, start_server=None):
@@ -10,15 +9,13 @@ class Server():
 
         self._server_list = []
 
-        self._work_stack = []
-        self._default_work = DefaultServerWork(self)
-
         thr = self.server_config.server_thread(self._msg_recv)
         thr.start()
         self.server_thread = thr
         
+        self.expecting = False
         if start_server:
-            self._append_work(SetServerListWork(self))
+            self.expecting = 'serverList'
             start_server.get_server_list(self.signature)
 
     def append_server(self, server):
@@ -37,18 +34,40 @@ class Server():
 
         return server_array
 
-    def _append_work(self, work):
-        self._work_stack.append(work)
-
-    def _get_work(self):
-        if self._work_stack:
-            return self._work_stack.pop()
-        return self._default_work
-
     def _msg_recv(self, msg):
-        work = self._get_work()
-        return work(msg)
+
+        (bts_msg, orig) = msg
+
+        str_msg = self.server_config.decode(bts_msg) #TODO break in method call
+        sig = ServerSignature(orig[0], orig[1] - 1)
+        conf = ServerConfig(sig)
+
+        if self.expecting == 'serverList': # TODO: Separa em métodos
+            self.expecting = False
+
+            # TODO: utilizar algum padrão melhor que evaluation
+            tuple_list = eval(str_msg)
+
+            for (ip, port) in tuple_list:
+                server_sig = ServerSignature(ip, port) # TODO: rename
+                server_config = ServerConfig(server_sig) # TODO: rename
+                ext_server = ExternalServer(server_config)
+                self.append_server(ext_server)
+
+            self.say_hello()
+            return True
+
+        if str_msg == 'get_server_list':
+            conf.send(self.signature, str(self.server_array()))
+            return True
     
+        if str_msg == 'hello':
+            ext_server = ExternalServer(conf)
+            self.append_server(ext_server)
+            return True
+
+        if str_msg == 'halt':
+            return False
+
     def halt(self):
-        self._append_work(HaltWork(self))
         self.server_config.send(self.signature, 'halt')
