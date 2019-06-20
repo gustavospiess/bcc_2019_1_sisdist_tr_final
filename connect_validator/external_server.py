@@ -11,3 +11,20 @@ class ExternalServer():
     def say_hello(self, orig):
         """Requisita o servidor externo avisando que está connectado à rede estabelecida"""
         self.server_config.send(orig, 'hello')
+
+    def __str__(self):
+        """implementação da conversão para string:
+        "ExternalServer for {str(self.server_config.signature)}"."""
+        return "ExternalServer for " + str(self.server_config.signature)
+
+    def __hash__(self):
+        """Calcula um hash para o servidor exerno, levando em consideração a configuração do mesmo"""
+        return hash(self.server_config)*31-1
+    
+    def __eq__(self, other):
+        """Valida a igualdade dos objetos por meio da classe e do hash.
+        Não sendo o 'other' uma instância de ExternalServer, é retornado NotImplemented.
+        Se não, é retornada a comparação dos hash's."""
+        if not isinstance(other, ExternalServer):
+            return NotImplemented
+        return hash(self) == hash(other)

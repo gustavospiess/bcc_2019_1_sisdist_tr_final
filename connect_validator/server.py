@@ -10,7 +10,7 @@ class Server():
         self.signature = signature
         self.server_config = ServerConfig(signature)
 
-        self._server_list = []
+        self._server_list = set()
 
         thr = self.server_config.server_thread(self._msg_recv)
         thr.start()
@@ -23,7 +23,16 @@ class Server():
 
     def _append_server(self, server):
         """método interno para injeção de novos servidores na lista de servidores conhecidos."""
-        self._server_list.append(server) # TODO: adicionar validação para impedir duplicidade
+        self._server_list.add(server) # TODO: adicionar validação para impedir duplicidade
+
+    def _next_server(self):
+        """método interno para obténção do próximo servidor conhecido."""
+        sort_method = lambda se: hash(se.server_config)
+        sorted_list = sorted(self._server_list, key=sort_method)
+        for server in sorted_list:
+            if hash(server.server_config) > hash(self.server_config):
+                return server
+        return sorted_list[0]
 
     def _say_hello(self):
         """método interno para disparo das mensagens de aceno para os servidores conhecidos."""
@@ -93,4 +102,3 @@ class Server():
         server_array.append(self.signature.receive)
 
         return server_array
-

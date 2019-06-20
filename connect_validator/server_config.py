@@ -1,17 +1,46 @@
 import socket
 import threading
 
+_LOCALHOST_REFERENCES = ('localhost',) # TODO: add real local ip
+
 class ServerSignature():
     """Classe de assinatura, descreve assinatura de recebimento e assinatura de envio.
-    Opcionalmetne é possível informar o parâmetro sender, que faz com que a inicialiação seja feita
-    como se a porta fosse a de envio, não á de recebimento"""
+    Opcionalmente é possível informar o parâmetro sender, que faz com que a inicialização seja feita
+    como se a porta fosse a de envio, não á de recebimento.
+    O recebimento de um IP entendido como localhost implica na substituição por 127.0.0.1"""
     def __init__(self, ip, port, sender=False):
+        if ip in _LOCALHOST_REFERENCES:
+            ip = '127.0.0.1'
         if sender:
             self.receive = (ip, port - 1)
             self.send = (ip, port)
             return
         self.receive = (ip, port)
         self.send = (ip, port + 1)
+
+    def __str__(self):
+        """implementação da conversão para string:
+        retorna o IP + a porta de recebimento. Ex.: 127.0.0.1:5050"""
+        (ip, port) = self.receive
+        return ip + ":" + str(port)
+    
+    def __hash__(self):
+        """Calcula um hash para a assinatura a partir do IP + porta de recebimento.
+        Isso é, a assinatura 127.0.0.1:5050 tem hash 1270015050"""
+        (ip, port) = self.receive
+        concat = ''
+        for part in ip.split('.'):
+            concat += part
+        concat += str(port)
+        return int(concat)
+    
+    def __eq__(self, other):
+        """Valida a igualdade dos objetos por meio da classe e do hash.
+        Não sendo o 'other' uma instância de ServerSignature, é retornado NotImplemented.
+        Se não, é retornada a comparação dos hash's."""
+        if not isinstance(other, ServerSignature):
+            return NotImplemented
+        return hash(self) == hash(other)
 
 class ServerConfig():
     """Classe de configuração de servidor.
@@ -57,7 +86,24 @@ class ServerConfig():
         """método interno para inicialização de thread para uso genérico."""
         thr = threading.Thread(target=target,args=args)
         return thr
+
+    def __str__(self):
+        """implementação da conversão para string:
+        "SeverConfig for {str(self.signature)}"."""
+        return "SeverConfig for " + str(self.signature)
+
+    def __hash__(self):
+        """Calcula um hash para a configuração do servidor, levando em consideração a assinatura e o charset"""
+        return hash(self.signature) * 31 + hash(self.charset)
     
+    def __eq__(self, other):
+        """Valida a igualdade dos objetos por meio da classe e do hash.
+        Não sendo o 'other' uma instância de SeverConfig, é retornado NotImplemented.
+        Se não, é retornada a comparação dos hash's."""
+        if not isinstance(other, ServerConfig):
+            return NotImplemented
+        return hash(self) == hash(other)
+
     def server_thread(self, call_back):
         """Inicializa um servidor UDP, recebendo mensagens e processando elas chamando o callback.
         Se o callback retornar um valor falso, é executado o halt da thread inicializada.
