@@ -51,22 +51,25 @@ class ServerConfig():
         - Encode
         - Decode"""
 
-    def __init__(self, signature, charset='utf-8'):
-        """Método de inicialização, recebe a assinatura (ServerSignature) e opcionalmente um charset (default utf-8)."""
+    def __init__(self, signature, charset='utf-8', debug_mode=False):
+        """Método de inicialização, recebe a assinatura (ServerSignature) e
+        opcionalmente um charset (default utf-8). É tamném opcional o disparo
+        de mensagens de log, por meio da flag debug_mode, por padrão false."""
         self.signature = signature
         self.charset = charset
+        self.debug_mode = debug_mode
 
     def _client_socket(self, orig):
         """método interno para inicialização de socket de envio."""
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # print('iniciado socket de envio em: ' + str(orig.send))
+        if self.debug_mode: print('iniciado socket de envio em: ' + str(orig.send))
         udp_socket.bind(('', orig.send[1]))
         return udp_socket
 
     def _server_socket(self):
         """método interno para inicialização de socket de recebimento."""
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # print('iniciado socket de recebimento em: ' + str(self.signature.receive))
+        if self.debug_mode: print('iniciado socket de recebimento em: ' + str(self.signature.receive))
         udp_socket.bind(self.signature.receive)
         return udp_socket
     
@@ -74,12 +77,12 @@ class ServerConfig():
         """método interno para manutenção de loop de recebimento de mensagens."""
         with self._server_socket() as udp_socket:
             while True:
-                # print('esperando mensagem em: ' + str(self.signature.receive))
+                if self.debug_mode: print('esperando mensagem em: ' + str(self.signature.receive))
                 msg = udp_socket.recvfrom(1024)
-                print('recebida mensagem (' + str(msg) + ') em: ' + str(self.signature.receive))
+                if self.debug_mode: print('recebida mensagem (' + str(msg) + ') em: ' + str(self.signature.receive))
                 (bts_msg, orig) = msg
                 if not call_back(bts_msg, orig):
-                    # print('callback retornou falso, halt')
+                    if self.debug_mode: print('callback retornou falso, halt')
                     break
 
     def _get_thread(self, target, args):
@@ -136,4 +139,4 @@ class ServerConfig():
         É esperado que a mensagem seja uma string"""
         with self._client_socket(orig) as udp:
             udp.sendto (self.encode(message), self.signature.receive)
-            print('enviada mensagem (' + str(message) + ') para: ' + str(self.signature.receive))
+            if self.debug_mode: print('enviada mensagem (' + str(message) + ') para: ' + str(self.signature.receive))
