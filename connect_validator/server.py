@@ -40,8 +40,9 @@ class Server():
     def _append_server(self, server):
         """método interno para injeção de novos servidores na lista de
         servidores conhecidos."""
-        if (self.signature != server.server_config.signature):
-            self._server_list.add(server)
+        if (self.signature == server.server_config.signature):
+            return
+        self._server_list.add(server)
 
     def _next_server(self, ignore=[]):
         """método interno para obténção do próximo servidor conhecido.
@@ -72,15 +73,10 @@ class Server():
         """Método interno para recebimento da listagem de servidores.
         É esperado receber uma string que valorada seja um iterável de tuplas de IP porta.
         Ex: "[(\\"localhost\\", 5050)]"."""
-        # TODO: utilizar algum padrão melhor que evaluation
-        tuple_list = eval(str_msg)
-
-
-        for (ip, port) in tuple_list:
-            signature = ServerSignature(ip, port)
-            conf = ServerConfig(signature)
-            ext_server = ExternalServer(conf)
-            self._append_server(ext_server)
+        # TODO: docstring
+        exteral_server_list = eval(str_msg)
+        for server in exteral_server_list:
+            self._append_server(server)
 
         self._say_hello()
         return True
@@ -93,7 +89,7 @@ class Server():
 
     def _recv_server_list_request(self, conf):
         """Envia para o solicitante a lista dos servidores conhecidos"""
-        conf.send(self.signature, str(self.server_array()))
+        conf.send(self.signature, repr(self.server_array()))
         return True
     
     def _conclude_token(self, token):
@@ -245,10 +241,5 @@ class Server():
     def server_array(self):
         """interface para obtenção da lista de tuplas IP e porta de recebimento
         dos servidores conhecidos."""
-        server_array = []
-        for serv in self._server_list:
-            server_array.append(serv.server_config.signature.receive)
-
-        server_array.append(self.signature.receive)
-
-        return server_array
+        external_self = ExternalServer(self.server_config)
+        return self._server_list | {external_self}

@@ -4,6 +4,10 @@ class ExternalServer():
         """Inicialização de servidor externo, recebe uma instancia de ServerConfig"""
         self.server_config = server_config
 
+    @property
+    def signature(self):
+        return self.server_config.signature
+
     def get_server_list(self, orig):
         """Requisita o servidor externo dos servidores por ele conhecidos e retorna a lista"""
         self.server_config.send(orig, 'get_server_list')
@@ -20,6 +24,10 @@ class ExternalServer():
         """implementação da conversão para string:
         "ExternalServer for {str(self.server_config.signature)}"."""
         return "ExternalServer for " + str(self.server_config.signature)
+    
+    def __repr__(self):
+        # TODO: docstring
+        return "ExternalServer(%s)" % (repr(self.server_config))
 
     def __hash__(self):
         """Calcula um hash para o servidor exerno, levando em consideração a configuração do mesmo"""

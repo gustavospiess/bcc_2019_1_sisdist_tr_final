@@ -23,6 +23,10 @@ class ServerSignature():
         retorna o IP + a porta de recebimento. Ex.: 127.0.0.1:5050"""
         (ip, port) = self.receive
         return ip + ":" + str(port)
+
+    def __repr__(self):
+        # TODO: docstring
+        return "ServerSignature(\"%s\", %s)" % self.receive
     
     def __hash__(self):
         """Calcula um hash para a assinatura a partir do IP + porta de recebimento.
@@ -58,6 +62,11 @@ class ServerConfig():
         self.signature = signature
         self.charset = charset
         self.debug_mode = debug_mode
+
+    def __repr__(self):
+        # TODO: docstring
+        params =(repr(self.signature), repr(self.charset), repr(self.debug_mode))
+        return "ServerConfig(%s, %s, %s)" % params
 
     def _client_socket(self, orig):
         """método interno para inicialização de socket de envio."""

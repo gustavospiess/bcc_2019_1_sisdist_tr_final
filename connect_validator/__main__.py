@@ -19,8 +19,7 @@ def menu(server, debug):
         print('Type an URL to validate it')
         print('Known servers:')
         for tup in server.server_array():
-            sig = ServerSignature(*tup)
-            print(' - ' + str(sig))
+            print(tup.signature)
         print('--------------------------------------------------------------------------------')   
 
         inp = 'exit'
@@ -60,25 +59,38 @@ class PortArgument(click.ParamType):
         except:
             self.fail('Not a valid port (port must be bigger than 5000).', param, ctx)
 
+def validate_server_port(server, port):
+    if port == server:
+        print('You cant connect to yourself in the same port.')
+        return False
+    if server and port.receive[0] == server.receive[0] and abs(port.receive[1] - server.receive[1]) == 1:
+        print(port.receive[1])
+        print(server.receive[1])
+        print(abs(port.receive[1] - server.receive[1]))
+        print('A server use Two ports, the onde informed and the one informed + 1, please, select another port.')
+        return False
+    return True
+
 @click.command()
 @click.option('--debug', '-d', 'debug', help='Show UDP message log.', is_flag=True)
 @click.option('--server', '-s', 'server', type=SignatureArgument(), help='ip:port of an existing server. If ommited a new net will be started.')
 @click.option('--port', '-p', 'port', type=PortArgument(), default='5050', help='port for in witch you want your server. This will be used as receive port and this +1 as sending port.')
 @click.option('--timeout', '-t', 'timeout_limit', type=int, default=2)
 def cli(debug, port, server, timeout_limit):
+
+    if debug:
+        print('Starting in debug mode')
+        print(port)
+        print(server)
+
+    if not validate_server_port(server, port):
+        return
+
     ext = None
-    if port == server:
-        print('You cant connect to yourself in the same port.')
-        return
-    if server and port.receive[0] == server.receive[0] and abs(port.receive[1] - server.receive[1]) == 1:
-        print(port.receive[1])
-        print(server.receive[1])
-        print(abs(port.receive[1] - server.receive[1]))
-        print('A server use Two ports, the onde informed and the one informed + 1, please, select another port.')
-        return
     if server:
-        conf = ServerConfig(server)
+        conf = ServerConfig(server, debug_mode=debug)
         ext = ExternalServer(conf)
+
     local_server = Server(port, ext, timeout_limit, debug)
 
     if debug:
