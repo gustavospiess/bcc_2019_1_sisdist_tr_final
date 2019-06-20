@@ -30,8 +30,62 @@ class Server():
         for server in self._server_list:
             server.say_hello(self.signature)
 
+    def _recv_server_list(self, str_msg):
+        """Método interno para recebimento da listagem de servidores.
+        É esperado receber uma string que valorada seja um iterável de tuplas de IP porta.
+        Ex: "[(\\"localhost\\", 5050)]"."""
+        # TODO: utilizar algum padrão melhor que evaluation
+        tuple_list = eval(str_msg)
+
+
+        for (ip, port) in tuple_list:
+            signature = ServerSignature(ip, port)
+            conf = ServerConfig(signature)
+            ext_server = ExternalServer(conf)
+            self._append_server(ext_server)
+
+        self._say_hello()
+        return True
+
+    def _recv_hello(self, conf):
+        """Método interno para recebimento de aceno de um servidor."""
+        ext_server = ExternalServer(conf)
+        self._append_server(ext_server)
+        return True
+
+    def _recv_server_list_request(self, conf):
+        conf.send(self.signature, str(self.server_array()))
+        return True
+
+    def _msg_recv(self, bts_msg, orig_tup):
+        """Método interno para recebimento de mensagem, enviado como callback para a thread separada.
+        Recebe o byte string da mensagem e a tupla IP porta de quem a mensagem foi recebida.
+        Retornar valores valorados como falso implica em para a thread de recebimento de mensagens"""
+
+        str_msg = self.server_config.decode(bts_msg)
+
+        if self.expecting == 'serverList':
+            self.expecting = False
+            self._recv_server_list(str_msg)
+
+        sig = ServerSignature(*orig_tup, True)
+        conf = ServerConfig(sig)
+
+        if str_msg == 'get_server_list':
+            return self._recv_server_list_request(conf)
+    
+        if str_msg == 'hello':
+            return self._recv_hello(conf)
+
+        if str_msg == 'halt':
+            return False
+
+    def halt(self):
+        """Método para finalizar a execução do socket de recebimento."""
+        self.server_config.send(self.signature, 'halt')
+
     def server_array(self):
-        """interface para obtenção da lista de tuplas ip e porta de recebimento dos servidores conhecidos."""
+        """interface para obtenção da lista de tuplas IP e porta de recebimento dos servidores conhecidos."""
         server_array = []
         for serv in self._server_list:
             server_array.append(serv.server_config.signature.receive)
@@ -40,41 +94,3 @@ class Server():
 
         return server_array
 
-    def _msg_recv(self, msg):
-        """Método interno para recebimento de mensagem, enviado como callback para a thread separada."""
-        (bts_msg, orig) = msg
-
-        str_msg = self.server_config.decode(bts_msg) #TODO break in method call
-        sig = ServerSignature(orig[0], orig[1] - 1)
-        conf = ServerConfig(sig)
-
-        if self.expecting == 'serverList': # TODO: Separa em métodos
-            self.expecting = False
-
-            # TODO: utilizar algum padrão melhor que evaluation
-            tuple_list = eval(str_msg)
-
-            for (ip, port) in tuple_list:
-                server_sig = ServerSignature(ip, port) # TODO: rename
-                server_config = ServerConfig(server_sig) # TODO: rename
-                ext_server = ExternalServer(server_config)
-                self._append_server(ext_server)
-
-            self._say_hello()
-            return True
-
-        if str_msg == 'get_server_list':
-            conf.send(self.signature, str(self.server_array()))
-            return True
-    
-        if str_msg == 'hello':
-            ext_server = ExternalServer(conf)
-            self._append_server(ext_server)
-            return True
-
-        if str_msg == 'halt':
-            return False
-
-    def halt(self):
-        """Método para finalizar a execução do socket de recebimento."""
-        self.server_config.send(self.signature, 'halt')

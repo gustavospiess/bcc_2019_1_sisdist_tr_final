@@ -2,8 +2,14 @@ import socket
 import threading
 
 class ServerSignature():
-    """Classe de assinatura, descreve assinatura de recebimento e assinatura de envio."""
-    def __init__(self, ip, port):
+    """Classe de assinatura, descreve assinatura de recebimento e assinatura de envio.
+    Opcionalmetne é possível informar o parâmetro sender, que faz com que a inicialiação seja feita
+    como se a porta fosse a de envio, não á de recebimento"""
+    def __init__(self, ip, port, sender=False):
+        if sender:
+            self.receive = (ip, port - 1)
+            self.send = (ip, port)
+            return
         self.receive = (ip, port)
         self.send = (ip, port + 1)
 
@@ -35,15 +41,15 @@ class ServerConfig():
         print('iniciado socket de recebimento em: ' + str(self.signature.receive))
         return udp_socket
     
-    @staticmethod
-    def _loop(server_config, call_back): # TODO: Tornar não estático
-        """método estático interno para manutenção de loop de recebimento de mensagens."""
-        with server_config._server_socket() as udp_socket:
+    def _loop(self, call_back):
+        """método interno para manutenção de loop de recebimento de mensagens."""
+        with self._server_socket() as udp_socket:
             while True:
-                print('esperando mensagem em: ' + str(server_config.signature.receive))
+                print('esperando mensagem em: ' + str(self.signature.receive))
                 msg = udp_socket.recvfrom(1024)
-                print('recebida mensagem (' + str(msg) + ') em: ' + str(server_config.signature.receive))
-                if not call_back(msg):
+                print('recebida mensagem (' + str(msg) + ') em: ' + str(self.signature.receive))
+                (bts_msg, orig) = msg
+                if not call_back(bts_msg, orig):
                     print('callback retornou falso, halt')
                     break
 
@@ -56,7 +62,7 @@ class ServerConfig():
         """Inicializa um servidor UDP, recebendo mensagens e processando elas chamando o callback.
         Se o callback retornar um valor falso, é executado o halt da thread inicializada.
         Retorna a thread de execução para manipulação."""
-        args = (self, call_back)
+        args = [call_back]
         thr = self._get_thread(self._loop, args)
         return thr
 
