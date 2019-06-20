@@ -36,7 +36,7 @@ def main():
 
     time.sleep(1)
 
-    a_server.send_token('www.google.com')
+    a_server.send_token('https://github.com/gustavospiess/bcc_2019_1_sisdist_tr_final/tree/refactor')# TODO: Normalizar url
     
     time.sleep(12)
 

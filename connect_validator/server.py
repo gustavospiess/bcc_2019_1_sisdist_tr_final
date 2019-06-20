@@ -6,6 +6,8 @@ from token_ring import Token
 import time
 import threading
 
+import requests # TODO: manual de isntalalção (pip install requests)
+
 class Server():
     def __init__(self, signature, start_server=None, timeout_limit = 2):
         """Inicialização do servidor, necessita o recebimento da assinatura do
@@ -102,8 +104,11 @@ class Server():
     
     def _request_url(self, url):
         # TODO: docstring
-        # TODO: implement
-        return 404
+        try:
+            response = requests.get(url)
+            return response.status_code
+        except:
+            return "Error, invalid url"
     
     def _proccess_token(self, token):
         """Realiza o processamento do token, utilizando o método _request_url
