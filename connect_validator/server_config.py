@@ -59,27 +59,27 @@ class ServerConfig():
     def _client_socket(self, orig):
         """método interno para inicialização de socket de envio."""
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        print('iniciado socket de envio em: ' + str(orig.send))
+        # print('iniciado socket de envio em: ' + str(orig.send))
         udp_socket.bind(('', orig.send[1]))
         return udp_socket
 
     def _server_socket(self):
         """método interno para inicialização de socket de recebimento."""
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # print('iniciado socket de recebimento em: ' + str(self.signature.receive))
         udp_socket.bind(self.signature.receive)
-        print('iniciado socket de recebimento em: ' + str(self.signature.receive))
         return udp_socket
     
     def _loop(self, call_back):
         """método interno para manutenção de loop de recebimento de mensagens."""
         with self._server_socket() as udp_socket:
             while True:
-                print('esperando mensagem em: ' + str(self.signature.receive))
+                # print('esperando mensagem em: ' + str(self.signature.receive))
                 msg = udp_socket.recvfrom(1024)
                 print('recebida mensagem (' + str(msg) + ') em: ' + str(self.signature.receive))
                 (bts_msg, orig) = msg
                 if not call_back(bts_msg, orig):
-                    print('callback retornou falso, halt')
+                    # print('callback retornou falso, halt')
                     break
 
     def _get_thread(self, target, args):

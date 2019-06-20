@@ -1,6 +1,10 @@
 from server_config import ServerConfig
 from server_config import ServerSignature
 from external_server import ExternalServer
+from token_ring import Token
+
+import time
+import threading
 
 class Server():
     def __init__(self, signature, start_server=None):
@@ -15,6 +19,8 @@ class Server():
         thr = self.server_config.server_thread(self._msg_recv)
         thr.start()
         self.server_thread = thr
+
+        self.token_thread_list = []
         
         self.expecting = False
         if start_server:
@@ -25,14 +31,25 @@ class Server():
         """método interno para injeção de novos servidores na lista de servidores conhecidos."""
         self._server_list.add(server)
 
-    def _next_server(self):
-        """método interno para obténção do próximo servidor conhecido."""
+    def _next_server(self, ignore=[]):
+        """método interno para obténção do próximo servidor conhecido.
+        Opcionalmente é possível enviar uma lista de ignore, para não enviar
+        para os servidores que não responderam anteriormente.  Se não houver
+        servidor com hash maior que o da instancia e que não esteja na lista de
+        ignore, é buscado o menor hash que não está na lista de ignore.  Se não
+        houver servidor algum, é retornada False"""
         sort_method = lambda se: hash(se.server_config)
         sorted_list = sorted(self._server_list, key=sort_method)
         for server in sorted_list:
+            if server in ignore:
+                continue
             if hash(server.server_config) > hash(self.server_config):
                 return server
-        return sorted_list[0]
+        for server in sorted_list:
+            if server in ignore:
+                continue
+            return sorted_list[0]
+        return ExternalServer(self.server_config)
 
     def _say_hello(self):
         """método interno para disparo das mensagens de aceno para os servidores conhecidos."""
@@ -63,7 +80,80 @@ class Server():
         return True
 
     def _recv_server_list_request(self, conf):
+        # TODO: docstring
         conf.send(self.signature, str(self.server_array()))
+        return True
+    
+    def _conclude_token(self, token):
+        # TODO: docstring
+        # TODO: implement
+        print('confirmado_token')
+        print(repr(token))
+        return True
+    
+    def _request_url(self, url):
+        # TODO: docstring
+        # TODO: implement
+        return 404
+    
+    def _proccess_token(self, token):
+        # TODO: docstring
+
+        url = token.url
+        response = self._request_url(url)
+        
+        token.append_server(str(self.signature), str(response))
+        return token
+
+    def _send_token(self, token):
+        print(str(self.signature) + str(token))
+        ignore = []
+        while True:
+            server = self._next_server(ignore)
+            print(1)
+            if not server:
+                print(2)
+                return self._conclude_token(token)
+            self.expecting = 'confirm_token'
+            server.send_token(self.signature, token)
+            print()
+            print(str(server.server_config.signature) + ' - ' + str(self.signature))
+            print(3)
+            for i in range(100000):
+                time.sleep(2/100000) # TODO: Add timeout configuration
+                if self.expecting != 'confirm_token':
+                    break
+            print(4)
+            if self.expecting == 'confirm_token':
+                print(5)
+                ignore.append(server)
+                # TODO: Add server not responding to token
+                continue
+            print(6)
+            break
+        print(7)
+
+    def _recv_token(self, conf, token):
+        # TODO: docstring
+        
+        conf.send(self.signature, 'confirm_token')
+
+        print(10)
+        if str(self.signature) in token.server_stack:
+            return self._conclude_token(token)
+
+        print(11)
+        new_token = self._proccess_token(token)
+        print(12)
+        thr = threading.Thread(target=self._send_token,args=[new_token])
+        thr.start()
+        print(13)
+        self.token_thread_list.append(thr)
+        print(14)
+        return True
+
+    def _recv_confirm_token(self):
+        self.expecting = False
         return True
 
     def _msg_recv(self, bts_msg, orig_tup):
@@ -72,10 +162,6 @@ class Server():
         Retornar valores valorados como falso implica em para a thread de recebimento de mensagens"""
 
         str_msg = self.server_config.decode(bts_msg)
-
-        if self.expecting == 'serverList':
-            self.expecting = False
-            self._recv_server_list(str_msg)
 
         sig = ServerSignature(*orig_tup, True)
         conf = ServerConfig(sig)
@@ -89,9 +175,29 @@ class Server():
         if str_msg == 'halt':
             return False
 
+        if str_msg == 'confirm_token':
+            print(8)
+            if self.expecting == 'confirm_token':
+                return self._recv_confirm_token()
+
+        if self.expecting == 'serverList':
+            self.expecting = False
+            return self._recv_server_list(str_msg)
+
+        token = eval(str_msg)
+        if isinstance(token, Token):
+            return self._recv_token(conf, token)
+
+    def send_token(self, url):
+        # TODO: docstring
+        token = Token(url)
+        token = self._proccess_token(token)
+        return self._send_token(token)
+
     def halt(self):
         """Método para finalizar a execução do socket de recebimento."""
         self.server_config.send(self.signature, 'halt')
+        # TODO: Validar threads (set timeout zero)
 
     def server_array(self):
         """interface para obtenção da lista de tuplas IP e porta de recebimento dos servidores conhecidos."""

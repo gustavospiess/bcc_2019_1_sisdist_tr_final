@@ -12,6 +12,10 @@ class ExternalServer():
         """Requisita o servidor externo avisando que está connectado à rede estabelecida"""
         self.server_config.send(orig, 'hello')
 
+    def send_token(self, orig, token):
+        # TODO: docstring
+        self.server_config.send(orig, repr(token))
+
     def __str__(self):
         """implementação da conversão para string:
         "ExternalServer for {str(self.server_config.signature)}"."""
