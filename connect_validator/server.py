@@ -23,7 +23,7 @@ class Server():
 
     def _append_server(self, server):
         """método interno para injeção de novos servidores na lista de servidores conhecidos."""
-        self._server_list.add(server) # TODO: adicionar validação para impedir duplicidade
+        self._server_list.add(server)
 
     def _next_server(self):
         """método interno para obténção do próximo servidor conhecido."""
