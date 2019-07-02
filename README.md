@@ -34,3 +34,16 @@ A qualquer momento, um servidor pode iniciar a validação de acesso dos demais 
 ### Demo
 ![alt text](https://i.ibb.co/mz8WB42/img.png)
 
+### Executando
+Para rodar utilize:
+```bash
+python3 connect_validator 
+```
+###Parametros:
+Os seguintes parâmetros podem ser utilizados para rodar a aplicação:
+'--debug' ou '-d' -> Exibe o log das mensagems UDP trocadas.
+'--server' ou '-s' ip:port -> Formato IP e porta de um servidor existente. Se omitido, um novo servidor é iniciado.
+'--port', '-p' -> Porta em que o servidor atual irá rodar para receber as mensagens e a porta +1 para mandar mensagens. O default é 5050.
+'--timeout', '-t' -> Timeout de resposta de servidor, o default é 2
+
+
