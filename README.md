@@ -39,11 +39,70 @@ Para rodar utilize:
 ```bash
 python3 connect_validator 
 ```
+
 ###Parametros:
-Os seguintes parâmetros podem ser utilizados para rodar a aplicação:
-'--debug' ou '-d' -> Exibe o log das mensagems UDP trocadas.
-'--server' ou '-s' ip:port -> Formato IP e porta de um servidor existente. Se omitido, um novo servidor é iniciado.
-'--port', '-p' -> Porta em que o servidor atual irá rodar para receber as mensagens e a porta +1 para mandar mensagens. O default é 5050.
-'--timeout', '-t' -> Timeout de resposta de servidor, o default é 2
+Para maiores informações quanto à parametrização possível execute:
+```bash
 
+$ python connect_validator --help
 
+> Options:
+>   -d, --debug                  Show UDP message log.
+>   -s, --server IP:PORT NUMBER  ip:port of an existing server. If ommited a new
+>                                net will be started.
+>   -p, --port PORT NUMBER       port for in witch you want your server. This
+>                                will be used as receive port and this +1 as
+>                                sending port.
+>   -t, --timeout INTEGER
+>   --help                       Show this message and exit.
+```
+
+### Trechos de código
+
+Inicialização de socket de envio:
+```python
+    def _client_socket(self, orig):
+        udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        udp_socket.bind(('', orig.send[1]))
+        return udp_socket
+```
+
+Inicialização de socket de recebimento:
+```python
+    def _server_socket(self):
+        udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        udp_socket.bind(self.signature.receive)
+        return udp_socket
+```
+
+Manutenção do loop de recebimento de mensagens.
+```python    
+    def _loop(self, call_back):
+        with self._server_socket() as udp_socket:
+            while True:
+                msg = udp_socket.recvfrom(1024)
+                (bts_msg, orig) = msg
+                if not call_back(bts_msg, orig):
+                    break
+```
+
+Requisição do servidor externo dos servidores por ele conhecidos e retorna a lista
+```python
+    def get_server_list(self, orig):
+        self.server_config.send(orig, 'get_server_list')
+```
+
+Requisição do servidor externo avisando que está connectado à rede estabelecida
+```python
+    def say_hello(self, orig):
+        self.server_config.send(orig, 'hello')
+```
+
+Realiza um envio UDP/IP para a assinatura configurada.
+Necessário informar a origem para que seja realizado o bind do mesmo no envio.
+É esperado que a mensagem seja uma string
+```python
+    def send(self, orig, message):
+        with self._client_socket(orig) as udp:
+            udp.sendto (self.encode(message), self.signature.receive)
+```
