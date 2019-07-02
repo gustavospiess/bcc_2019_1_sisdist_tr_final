@@ -1,15 +1,9 @@
-# Connect validator
+# Trabalho final
 ## Sistemas Distribuídos
-
-#### Autores
-- Francisco Lucas Sens (francisco.lucas.sens@gmail.com)
-- Gustavo Henrique Spiess (gustavospiess@gmail.com)
-- José Wollinger (jose.wollinger@gmail.com)
-
-###### Departamento de Sistemas e Computação
-###### Universidade Regional de Blumenau (FURB) – Blumenau, SC – Brazil
-
----
+#### BCC 2019/1
+- Francisco Lucas Sens
+- Gustavo Henrique Spiess
+- José Wollinger
 
 ### Introdução
 Este é um software puramente distribuído cuja função é verificar se determinada URL é alcançável por diversos lugares e conexões diferentes. O problema se dá no universo de diferentes clientes, aonde é desejável saber se a partir de uma determinada conexão é possível atingir um determinado recurso, indiferente de sua localização, identificado pela sua URL. O software foi desenvolido na linguagem Python em sua terceira versão. Foi utilizado o protocolo de conexão UDP para as mensagens entre os servidores. 
