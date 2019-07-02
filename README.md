@@ -5,6 +5,9 @@
 - Gustavo Henrique Spiess
 - José Wollinger
 
+### Introdução
+Este é um software puramente distribuído cuja função é verificar se determinada URL é alcançável por diversos lugares e conexões diferentes. O problema se dá no universo de diferentes clientes, aonde é desejável saber se a partir de uma determinada conexão é possível atingir um determinado recurso, indiferente de sua localização, identificado pela sua URL. O software foi desenvolido na linguagem Python em sua terceira versão. Foi utilizado o protocolo de conexão UDP para as mensagens entre os servidores. 
+
 ### Descrição
 
 O objetivo do trabalho é o desenvolvimento de um sistema distribuído para a validação de acesso à uma URL determinada a partir de cada servidor conectado.
