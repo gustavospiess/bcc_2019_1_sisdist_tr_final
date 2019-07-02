@@ -93,7 +93,7 @@ class ServerConfig():
         """método interno para inicialização de socket de recebimento."""
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         if self.debug: print('iniciado socket de recebimento em: ' + self.signature.receive_str)
-        udp_socket.bind(self.signature.receive)
+        udp_socket.bind(('', self.signature.receive[1]))
         return udp_socket
     
     def _loop(self, call_back):
@@ -161,5 +161,5 @@ class ServerConfig():
         Necessário informar a origem para que seja realizado o bind do mesmo no envio.
         É esperado que a mensagem seja uma string"""
         with self._client_socket(orig) as udp:
-            udp.sendto (self.encode(message), self.signature.receive)
+            udp.sendto(self.encode(message), self.signature.receive)
             if self.debug: print('enviada mensagem (' + str(message) + ') para: ' + self.signature.receive_str)
